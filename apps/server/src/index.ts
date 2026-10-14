@@ -9,7 +9,7 @@ const app = new Hono();
 app.use(
   "/api/auth/*",
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://stock-sphere-web.onrender.com",
     credentials: true,
   }),
 );
@@ -30,9 +30,12 @@ app.get("/api/health", (c) => {
   });
 });
 
+const port = Number(process.env.PORT) || 3001;
+
 serve({
   fetch: app.fetch,
-  port: 3001,
+  port,
+  hostname:"0.0.0.0",
 });
 
-console.log("Server running on http://localhost:3001");
+console.log(`Server running on port:${port}`);

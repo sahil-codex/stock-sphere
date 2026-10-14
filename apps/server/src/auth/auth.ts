@@ -13,6 +13,6 @@ export const auth = betterAuth({
   },
 
   trustedOrigins: [
-    "http://localhost:5173",
+    "https://stock-sphere-1.onrender.com",
   ],
 });
