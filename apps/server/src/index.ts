@@ -9,7 +9,7 @@ const app = new Hono();
 app.use(
   "/api/auth/*",
   cors({
-    origin: "https://stock-sphere-web.onrender.com",
+    origin: "https://stock-sphere-1.onrender.com",
     credentials: true,
   }),
 );

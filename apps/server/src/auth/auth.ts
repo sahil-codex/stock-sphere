@@ -11,7 +11,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-
+baseURL: "https://stock-sphere.onrender.com",
   trustedOrigins: [
     "https://stock-sphere-1.onrender.com",
   ],
