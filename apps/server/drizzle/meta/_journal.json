@@ -8,6 +8,13 @@
       "when": 1791202874554,
       "tag": "0000_funny_matthew_murdock",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792058445710,
+      "tag": "0001_tan_dagger",
+      "breakpoints": true
     }
   ]
 }
