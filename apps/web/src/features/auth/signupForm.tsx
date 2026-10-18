@@ -24,9 +24,7 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSignup = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
@@ -66,12 +64,13 @@ export default function SignupForm() {
 
   return (
     <div className="soft-geometric-bg flex min-h-svh items-center justify-center px-4 py-8">
-      <Card className="w-full max-w-md gap-0 rounded-2xl border-white/70 bg-[#F8F6EB]/95 shadow-[0_12px_40px_rgba(91,65,145,0.12)] backdrop-blur-sm">
-        <CardHeader className="space-y-3 px-6 pt-6 pb-4">
-          <div className="mb-1 flex items-center gap-3">
+      <Card className="w-full max-w-lg gap-0 rounded-2xl border-white/70 bg-[#F8F6EB]/95 shadow-[0_12px_40px_rgba(91,65,145,0.12)] backdrop-blur-sm">
+        <CardHeader className="space-y-3 px-7 pt-6 pb-4">
+          <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#A98BE8] to-[#7650D8] text-white shadow-md shadow-purple-300/40">
               <Boxes className="h-6 w-6" />
             </div>
+
             <div>
               <p className="text-lg font-bold tracking-tight text-[#30263F]">
                 Stock<span className="text-[#8058D8]">Sphere</span>
@@ -91,7 +90,7 @@ export default function SignupForm() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="px-6 pt-0 pb-6">
+        <CardContent className="px-7 pt-0 pb-6">
           <form onSubmit={handleSignup} className="space-y-4">
             {error && (
               <div
@@ -102,32 +101,34 @@ export default function SignupForm() {
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <Label htmlFor="name">Full name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-                required
-                className="border-[#DCD3EA] bg-white/80 focus-visible:ring-[#9270D8]"
-              />
-            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="name">Full name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  required
+                  className="border-[#DCD3EA] bg-white/80 focus-visible:ring-[#9270D8]"
+                />
+              </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                required
-                className="border-[#DCD3EA] bg-white/80 focus-visible:ring-[#9270D8]"
-              />
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                  className="border-[#DCD3EA] bg-white/80 focus-visible:ring-[#9270D8]"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">
@@ -146,7 +147,7 @@ export default function SignupForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[#92869F] transition-colors hover:text-[#7650D8]"
+                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[#92869F] hover:text-[#7650D8]"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -173,10 +174,8 @@ export default function SignupForm() {
                 />
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowConfirmPassword((prev) => !prev)
-                  }
-                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[#92869F] transition-colors hover:text-[#7650D8]"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[#92869F] hover:text-[#7650D8]"
                   aria-label={
                     showConfirmPassword
                       ? "Hide confirm password"
@@ -194,7 +193,7 @@ export default function SignupForm() {
 
             <Button
               type="submit"
-              className="w-full bg-[#7650D8] text-white shadow-sm transition-colors hover:bg-[#603CB9]"
+              className="w-full bg-[#7650D8] text-white shadow-sm hover:bg-[#603CB9]"
               disabled={loading}
             >
               {loading ? "Creating account..." : "Create account"}
@@ -205,7 +204,7 @@ export default function SignupForm() {
             Already have an account?{" "}
             <a
               href="/login"
-              className="font-semibold text-[#7650D8] underline-offset-4 transition-colors hover:text-[#5936B4] hover:underline"
+              className="font-semibold text-[#7650D8] underline-offset-4 hover:text-[#5936B4] hover:underline"
             >
               Sign in
             </a>
