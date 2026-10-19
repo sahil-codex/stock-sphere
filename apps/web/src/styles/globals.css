@@ -150,53 +150,58 @@
 
 /* Optional geometric background.
    Add className="soft-geometric-bg" to a page wrapper. */
+
 .soft-geometric-bg {
   position: relative;
   isolation: isolate;
-  background-color: var(--background);
+  min-height: 100vh;
+  min-height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  background-color: #e3dfeb;
   background-image:
     linear-gradient(
       135deg,
-      transparent 0 44%,
-      rgb(145 112 220 / 7%) 44% 56%,
-      transparent 56%
+      transparent 0 47%,
+      rgb(157 126 224 / 10%) 47% 53%,
+      transparent 53%
     ),
     linear-gradient(
       45deg,
       transparent 0 46%,
-      rgb(255 255 255 / 22%) 46% 54%,
+      rgb(255 255 255 / 24%) 46% 54%,
       transparent 54%
     );
-  background-size: 340px 340px, 280px 280px;
-  background-position: top left, bottom right;
+  background-size: 420px 420px, 360px 360px;
+  background-position: center, center;
 }
 
-/* Soft, decorative shapes behind the content */
 .soft-geometric-bg::before,
 .soft-geometric-bg::after {
   content: "";
   position: absolute;
   z-index: -1;
   pointer-events: none;
-  border-radius: 32px;
+  border-radius: 36px;
   transform: rotate(35deg);
 }
 
 .soft-geometric-bg::before {
-  width: 220px;
-  height: 220px;
-  top: 7%;
-  right: 5%;
-  background: rgb(157 126 224 / 9%);
+  width: 380px;
+  height: 380px;
+  top: 5%;
+  right: -100px;
+  background: rgb(157 126 224 / 8%);
 }
 
 .soft-geometric-bg::after {
-  width: 160px;
-  height: 160px;
-  bottom: 8%;
-  left: 4%;
+  width: 300px;
+  height: 300px;
+  bottom: 3%;
+  left: -80px;
   background: rgb(255 255 255 / 20%);
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   *,
