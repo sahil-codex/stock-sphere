@@ -1,10 +1,11 @@
-import { uuid,varchar,integer,numeric,timestamp,pgEnum,index,check, pgTable,} from "drizzle-orm/pg-core";
-
+import { uuid,varchar,integer,numeric,timestamp,pgEnum,index,check, pgTable,text,} from "drizzle-orm/pg-core";
+import { user } from "@/auth/auth-schema";
 import { sql } from "drizzle-orm";
 export const products = pgTable(
     "products",
     {
         id:uuid("id").defaultRandom().primaryKey(),
+        userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
         name:varchar("name",{length:150}).notNull(),
         category:varchar("category",{length:100}).notNull(),
         quantity:integer("quantity").notNull().default(0),
