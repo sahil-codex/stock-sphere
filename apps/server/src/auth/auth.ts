@@ -16,4 +16,10 @@ baseURL: "https://stock-sphere.onrender.com",
     "https://stock-sphere-1.onrender.com",
     "http://localhost:5173",
   ],
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+    },
+  },
 });
