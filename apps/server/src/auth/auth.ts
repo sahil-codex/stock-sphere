@@ -14,5 +14,6 @@ export const auth = betterAuth({
 baseURL: "https://stock-sphere.onrender.com",
   trustedOrigins: [
     "https://stock-sphere-1.onrender.com",
+    "http://localhost:5173",
   ],
 });
