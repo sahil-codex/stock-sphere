@@ -8,7 +8,8 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
     },
+    baseURL: "https://stock-sphere.onrender.com",
     trustedOrigins: [
-        "http://localhost:5173",
+        "https://stock-sphere-1.onrender.com",
     ],
 });

@@ -1,64 +1,54 @@
-import dotenv from "dotenv";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
-import dns from "node:dns/promises";
-import postgres from "postgres";
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const possibleEnvPaths = [
-    path.resolve(process.cwd(), "../../.env"),
-    path.resolve(process.cwd(), ".env"),
-    path.resolve(__dirname, "../../../.env"),
-];
-for (const envPath of possibleEnvPaths) {
-    if (fs.existsSync(envPath)) {
-        dotenv.config({ path: envPath });
-    }
+import { config } from "dotenv";
+import { resolve } from "path";
+import https from "https";
+import { neon, neonConfig } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { migrate } from "drizzle-orm/neon-http/migrator";
+// Load env from monorepo root
+config({ path: resolve(process.cwd(), "../../.env") });
+// Custom fetch that forces IPv4 to avoid ETIMEDOUT issues on systems
+// where Node.js undici (built-in fetch) struggles with dual-stack DNS
+function ipv4Fetch(url, init) {
+    return new Promise((resolve, reject) => {
+        const parsedUrl = new URL(url.toString());
+        const options = {
+            hostname: parsedUrl.hostname,
+            port: Number(parsedUrl.port) || 443,
+            path: parsedUrl.pathname + parsedUrl.search,
+            method: init?.method || "GET",
+            headers: init?.headers || {},
+            family: 4,
+        };
+        const req = https.request(options, (res) => {
+            const chunks = [];
+            res.on("data", (chunk) => chunks.push(chunk));
+            res.on("end", () => {
+                const body = Buffer.concat(chunks);
+                const bodyText = body.toString();
+                resolve(new globalThis.Response(bodyText, {
+                    status: res.statusCode,
+                    headers: res.headers,
+                }));
+            });
+        });
+        req.on("error", reject);
+        const reqBody = init?.body;
+        if (reqBody) {
+            req.write(reqBody);
+        }
+        req.end();
+    });
 }
-const rawUrl = process.env.DATABASE_URL;
-if (!rawUrl) {
-    console.error("❌ DATABASE_URL is not defined in .env");
-    process.exit(1);
-}
-const cleanUrl = rawUrl.replace("-pooler", "").replace("&channel_binding=require", "");
-const parsed = new URL(cleanUrl);
-let host = parsed.hostname;
-try {
-    const ips = await dns.resolve4(parsed.hostname);
-    if (ips.length > 0) {
-        host = ips[0];
-    }
-}
-catch {
-    // fallback to hostname
-}
-console.log(`⏳ Connecting to Neon database (${host})...`);
-const sql = postgres({
-    host,
-    port: Number(parsed.port) || 5432,
-    database: parsed.pathname.slice(1),
-    username: parsed.username,
-    password: decodeURIComponent(parsed.password),
-    ssl: { servername: parsed.hostname, rejectUnauthorized: false },
-    max: 1,
-    connect_timeout: 10,
-});
-const db = drizzle(sql);
+neonConfig.fetchFunction = ipv4Fetch;
+const sql = neon(process.env.DATABASE_URL);
+const db = drizzle({ client: sql });
 async function main() {
-    try {
-        const drizzleDir = path.resolve(__dirname, "../../drizzle");
-        await migrate(db, { migrationsFolder: drizzleDir });
-        console.log("✅ Migrations applied successfully!");
-    }
-    catch (error) {
-        console.error("❌ Migration failed:", error);
-        process.exit(1);
-    }
-    finally {
-        await sql.end();
-    }
+    console.log("⏳ Running migrations...");
+    await migrate(db, { migrationsFolder: "./drizzle", migrationsSchema: "public" });
+    console.log("✅ Migrations applied successfully!");
+    process.exit(0);
 }
-main();
+main().catch((err) => {
+    console.error("❌ Migration failed:", err);
+    process.exit(1);
+});
