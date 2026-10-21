@@ -10,13 +10,16 @@ import type { InferInsertModel } from "drizzle-orm";
 
 const app = new Hono();
 
-const FRONTEND_URL = "https://stock-sphere-1.onrender.com";
+const allowedOrigins = new Set([
+  "http://localhost:5173",
+  "https://stock-sphere-1.onrender.com",
+]);
 
-// Allow the frontend to call both auth and product APIs.
 app.use(
   "/api/*",
   cors({
-    origin: FRONTEND_URL,
+    origin: (origin) =>
+      allowedOrigins.has(origin) ? origin : undefined,
     credentials: true,
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
