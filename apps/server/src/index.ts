@@ -255,6 +255,23 @@ app.get("/", (c) =>
 
 app.get("/api/health", (c) => c.json({ status: "ok" }));
 
+app.get("/api/health/db-details", async (c) => {
+  try {
+    const result = await db.execute(sql`
+      SELECT
+        current_database() AS database_name,
+        current_schema() AS schema_name,
+        current_setting('search_path') AS search_path,
+        to_regclass('public.products') AS products_table
+    `);
+
+    return c.json({ database: result.rows });
+  } catch (error) {
+    console.error("Database diagnostics failed:", error);
+    return c.json({ error: "Database diagnostics failed" }, 500);
+  }
+});
+
 const port = Number(process.env.PORT) || 3001;
 
 serve({
