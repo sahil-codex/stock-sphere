@@ -258,12 +258,16 @@ export function DashboardPage() {
     }
 
     const payload = {
-      name: form.name.trim(),
-      category: form.category.trim(),
-      quantity,
-      price,
-      lowStockThreshold,
-    };
+  name: form.name.trim(),
+  category: form.category.trim(),
+  price,
+  lowStockThreshold,
+};
+
+const createPayload = {
+  ...payload,
+  quantity,
+};
 
     setSaving(true);
 
@@ -273,7 +277,7 @@ export function DashboardPage() {
           `/api/products/${editingProduct.id}`,
           {
             method: "PATCH",
-            body: JSON.stringify(payload),
+            body: JSON.stringify(createPayload),
           },
         );
         setNotice("Product updated successfully.");
@@ -852,26 +856,29 @@ export function DashboardPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label
-                    htmlFor="product-quantity"
-                    className="text-sm font-medium text-[#494052]"
-                  >
-                    Quantity
-                  </label>
-                  <input
-                    id="product-quantity"
-                    type="number"
-                    min="0"
-                    step="1"
-                    className={inputClass}
-                    value={form.quantity}
-                    onChange={(event) =>
-                      setForm({ ...form, quantity: event.target.value })
-                    }
-                    required
-                  />
-                </div>
+               {!editingProduct && (
+              <div>
+                <label
+                  htmlFor="product-quantity"
+                  className="text-sm font-medium text-[#494052]"
+                >
+                  Quantity
+                </label>
+                <input
+                  id="product-quantity"
+                  type="number"
+                  min="0"
+                  step="1"
+                  className={inputClass}
+                  value={form.quantity}
+                  onChange={(event) =>
+                    setForm({ ...form, quantity: event.target.value })
+                  }
+                  required
+                />
+              </div>
+               )}
+
                 <div>
                   <label
                     htmlFor="product-price"

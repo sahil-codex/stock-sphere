@@ -40,10 +40,17 @@ const productSchema = z.object({
   lowStockThreshold: z.number().int().nonnegative(),
 });
 
-const updateProductSchema = productSchema.partial().refine(
-  (data) => Object.keys(data).length > 0,
-  { message: "Provide at least one field to update" },
-);
+const updateProductSchema = z
+  .object({
+    name: z.string().trim().min(1).max(150).optional(),
+    category: z.string().trim().min(1).max(100).optional(),
+    price: z.number().finite().nonnegative().optional(),
+    lowStockThreshold: z.number().int().nonnegative().optional(),
+  })
+  .strict()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Provide at least one field to update",
+  });
 
 const productIdSchema = z.string().uuid();
 
@@ -76,6 +83,7 @@ app.get("/api/products", async (c) => {
 });
 
 // Create a product
+
 app.post("/api/products", async (c) => {
   try {
     const userId = await getSessionUserId(c.req.raw.headers);
@@ -101,21 +109,56 @@ app.post("/api/products", async (c) => {
       );
     }
 
-    const [product] = await db
-      .insert(products)
-      .values({
-        ...parsed.data,
-        price: parsed.data.price.toFixed(2),
-        userId,
-      })
-      .returning();
+    const { quantity, price, ...details } = parsed.data;
 
-    return c.json({ product }, 201);
+    const result = await db.execute(sql`
+      WITH new_product AS (
+        INSERT INTO products (
+          user_id,
+          name,
+          category,
+          quantity,
+          price,
+          low_stock_threshold
+        )
+        VALUES (
+          ${userId},
+          ${details.name},
+          ${details.category},
+          ${quantity},
+          ${price.toFixed(2)},
+          ${details.lowStockThreshold}
+        )
+        RETURNING *
+      ),
+      opening_transaction AS (
+        INSERT INTO stock_transactions (
+          product_id,
+          type,
+          quantity
+        )
+        SELECT id, 'IN'::stock_transaction_type, quantity
+        FROM new_product
+        WHERE quantity > 0
+        RETURNING id
+      )
+      SELECT new_product.*
+      FROM new_product
+    `);
+
+    const row = result.rows[0];
+
+    if (!row) {
+      return c.json({ error: "Failed to create product" }, 500);
+    }
+
+    return c.json({ product: row }, 201);
   } catch (error) {
     console.error("Create product failed:", error);
     return c.json({ error: "Failed to create product" }, 500);
   }
 });
+
 
 // Get one product owned by the signed-in user
 app.get("/api/products/:id", async (c) => {
