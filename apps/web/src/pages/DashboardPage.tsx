@@ -38,6 +38,20 @@ type ProductForm = {
   lowStockThreshold: string;
 };
 
+type StockTransaction = {
+  id: string;
+  productId: string;
+  productName: string;
+  type: "IN" | "OUT";
+  quantity: number;
+  createdAt: string;
+};
+
+type TransactionForm = {
+  productId: string;
+  type: "IN" | "OUT";
+  quantity: string;
+};
 const emptyForm: ProductForm = {
   name: "",
   category: "",
@@ -46,6 +60,15 @@ const emptyForm: ProductForm = {
   lowStockThreshold: "5",
 };
 
+const [transactions, setTransactions] = useState<StockTransaction[]>([]);
+const [transactionForm, setTransactionForm] =
+  useState<TransactionForm>({
+    productId: "",
+    type: "IN",
+    quantity: "1",
+  });
+const [transactionLoading, setTransactionLoading] = useState(false);
+const [transactionError, setTransactionError] = useState("");
 const cardClass =
   "rounded-2xl border border-[#DCD3EA] bg-[#F8F6EB]/95 shadow-[0_8px_24px_rgba(91,65,145,0.06)]";
 
@@ -135,6 +158,28 @@ export function DashboardPage() {
     }
   }, []);
 
+  const loadTransactions = useCallback(async () => {
+  try {
+    const data = await apiRequest<{
+      transactions: StockTransaction[];
+    }>("/api/transactions");
+
+    setTransactions(data.transactions);
+    setTransactionError("");
+  } catch (err) {
+    setTransactionError(
+      err instanceof Error
+        ? err.message
+        : "Could not load transaction history.",
+    );
+  }
+
+  useEffect(() => {
+  void loadTransactions();
+}, [loadTransactions]);
+
+
+}, []);
   useEffect(() => {
     void loadProducts();
   }, [loadProducts]);
@@ -296,7 +341,54 @@ export function DashboardPage() {
       icon: Wallet,
     },
   ];
+  async function handleStockTransaction(
+  event: FormEvent<HTMLFormElement>,
+) {
+  event.preventDefault();
+  setTransactionError("");
+  setError("");
+  setNotice("");
 
+  const quantity = Number(transactionForm.quantity);
+
+  if (
+    !transactionForm.productId ||
+    !Number.isSafeInteger(quantity) ||
+    quantity <= 0
+  ) {
+    setTransactionError("Select a product and enter a positive whole quantity.");
+    return;
+  }
+
+  setTransactionLoading(true);
+
+  try {
+    await apiRequest(
+      `/api/products/${transactionForm.productId}/transactions`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          type: transactionForm.type,
+          quantity,
+        }),
+      },
+    );
+
+    setNotice(
+      `Stock ${transactionForm.type === "IN" ? "IN" : "OUT"} recorded successfully.`,
+    );
+
+    await Promise.all([loadProducts(), loadTransactions()]);
+  } catch (err) {
+    setTransactionError(
+      err instanceof Error
+        ? err.message
+        : "Could not record stock transaction.",
+    );
+  } finally {
+    setTransactionLoading(false);
+  }
+}
   return (
     <main className="soft-geometric-bg min-h-svh p-4 sm:p-8">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -546,6 +638,131 @@ export function DashboardPage() {
           )}
         </section>
       </div>
+<section className={`${cardClass} p-5 sm:p-7`}>
+  <h2 className="text-xl font-semibold text-[#30263F]">
+    Stock transactions
+  </h2>
+  <p className="mt-1 text-sm text-[#777080]">
+    Record stock movements and review the transaction ledger.
+  </p>
+
+  {transactionError && (
+    <p role="alert" className="mt-4 text-sm text-red-700">
+      {transactionError}
+    </p>
+  )}
+
+  <form
+    onSubmit={handleStockTransaction}
+    className="mt-5 grid gap-4 sm:grid-cols-4"
+  >
+    <label className="text-sm font-medium text-[#494052]">
+      Product
+      <select
+        className={inputClass}
+        value={transactionForm.productId}
+        onChange={(event) =>
+          setTransactionForm({
+            ...transactionForm,
+            productId: event.target.value,
+          })
+        }
+        required
+      >
+        <option value="">Select product</option>
+        {products.map((product) => (
+          <option key={product.id} value={product.id}>
+            {product.name} — {product.quantity} available
+          </option>
+        ))}
+      </select>
+    </label>
+
+    <label className="text-sm font-medium text-[#494052]">
+      Movement
+      <select
+        className={inputClass}
+        value={transactionForm.type}
+        onChange={(event) =>
+          setTransactionForm({
+            ...transactionForm,
+            type: event.target.value as "IN" | "OUT",
+          })
+        }
+      >
+        <option value="IN">Stock IN</option>
+        <option value="OUT">Stock OUT</option>
+      </select>
+    </label>
+
+    <label className="text-sm font-medium text-[#494052]">
+      Quantity
+      <input
+        className={inputClass}
+        type="number"
+        min="1"
+        step="1"
+        required
+        value={transactionForm.quantity}
+        onChange={(event) =>
+          setTransactionForm({
+            ...transactionForm,
+            quantity: event.target.value,
+          })
+        }
+      />
+    </label>
+
+    <div className="flex items-end">
+      <button
+        type="submit"
+        disabled={transactionLoading || products.length === 0}
+        className="w-full rounded-xl bg-[#7650D8] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#603CB9] disabled:opacity-50"
+      >
+        {transactionLoading ? "Recording..." : "Record movement"}
+      </button>
+    </div>
+  </form>
+
+  <div className="mt-8 overflow-x-auto rounded-xl border border-[#E5DDED]">
+    <table className="w-full min-w-[600px] text-left text-sm">
+      <thead className="bg-[#EAE2F5]/70 text-xs uppercase tracking-wide text-[#655775]">
+        <tr>
+          <th className="px-4 py-3">Date</th>
+          <th className="px-4 py-3">Product</th>
+          <th className="px-4 py-3">Type</th>
+          <th className="px-4 py-3 text-right">Quantity</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-[#E5DDED]">
+        {transactions.map((transaction) => (
+          <tr key={transaction.id} className="bg-white/50">
+            <td className="px-4 py-3">
+              {new Date(transaction.createdAt).toLocaleString()}
+            </td>
+            <td className="px-4 py-3">{transaction.productName}</td>
+            <td className="px-4 py-3">{transaction.type}</td>
+            <td className="px-4 py-3 text-right tabular-nums">
+              {transaction.type === "IN" ? "+" : "−"}
+              {transaction.quantity}
+            </td>
+          </tr>
+        ))}
+        {transactions.length === 0 && (
+          <tr>
+            <td
+              colSpan={4}
+              className="px-4 py-8 text-center text-[#777080]"
+            >
+              No stock transactions recorded yet.
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</section>
+
 
       {dialogOpen && (
         <div
